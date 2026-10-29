@@ -1,0 +1,13 @@
+{
+  "name": "grow-your-money-astro",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "latest"
+  }
+}

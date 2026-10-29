@@ -1,0 +1,24 @@
+---
+import '../styles/global.css';
+import IconSprite from '../components/IconSprite.astro';
+const { title = 'Grow Your Money – Comunidad de Arbitraje Internacional' } = Astro.props;
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <link rel="icon" type="image/png" href="/img/icono.png" />
+    <link rel="apple-touch-icon" href="/img/icono.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <IconSprite />
+    <slot />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+    <script is:inline src="/landing.js"></script>
+  </body>
+</html>
