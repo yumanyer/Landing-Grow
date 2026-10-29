@@ -1,117 +1,459 @@
+---
+/**
+ * Hero.astro
+ * Home: "Tu dinero puede trabajar por vos"
+ * Fondo: globo con mesas OTC / red P2P / intercambio de divisas + marquee de pares
+ *
+ * Requisitos externos (viven en tu layout / CSS global):
+ *  - Sprite SVG con los símbolos #i-play e #i-right
+ *  - Variables CSS: --bg, --lime, --line, --mute
+ *  - Clases globales: .wrap, .btn, .lime
+ */
+
+// Pares del marquee (decorativo: sin cotizaciones, no son datos reales)
+const PAIRS = [
+  'USD/ARS', 'EUR/USD', 'USDC/USD', 'BTC/USD', 'USD/BRL', 'GBP/USD', 'USD/CHF',
+  'USD/JPY', 'USD/AED', 'EUR/CHF', 'USDT/ARS', 'USD/SGD', 'AUD/USD', 'USD/ZAR',
+];
+
+// Se duplica la lista: el track se mueve -50% y el loop queda continuo
+const TRACK = [...PAIRS, ...PAIRS].map((pair) => {
+  const [base, quote] = pair.split('/');
+  return { base, quote };
+});
+---
+
 <header class="hero" id="inicio">
-    <canvas id="net" aria-hidden="true"></canvas>
-    <div class="wrap">
-      <h1>Tu dinero puede <span class="lime">trabajar</span> por vos</h1>
-      <div class="hero-box">
-        <div class="video" role="button" tabindex="0" aria-label="Reproducir video de presentación">
-          <span class="play"><svg class="ic"><use href="#i-play" /></svg></span>
-          <em>Video de presentación</em>
-        </div>
+  <!-- Canvas decorativo: globo + hubs + arcos + pulsos (aria-hidden: no aporta info a lectores de pantalla) -->
+  <canvas id="globe" aria-hidden="true"></canvas>
+
+  <div class="wrap">
+    <h1>Tu dinero puede <span class="lime">trabajar</span> por vos</h1>
+
+    <div class="hero-box">
+      <!-- TODO (PLACEHOLDER): reemplazar por el video real del cliente cuando esté disponible -->
+      <div class="video" role="button" tabindex="0" aria-label="Reproducir video de presentación">
+        <span class="play"><svg class="ic"><use href="#i-play" /></svg></span>
+        <em>Video de presentación</em>
       </div>
-      <a class="btn" href="#roadmap">Conocé cómo funciona
-        <svg class="ic" style="font-size:1.1rem"><use href="#i-right" /></svg>
-      </a>
     </div>
-  </header>
+
+    <a class="btn" href="#roadmap">
+      Conocé cómo funciona
+      <svg class="ic" style="font-size:1.1rem"><use href="#i-right" /></svg>
+    </a>
+  </div>
+
+  <!-- Marquee de pares (decorativo) -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      {TRACK.map(({ base, quote }) => (
+        <span><b>{base}</b>/{quote}</span>
+      ))}
+    </div>
+  </div>
+</header>
 
 <script>
+  /* ===== Accesibilidad: activar el "video" con Enter o Espacio ===== */
   const video = document.querySelector<HTMLElement>('.video');
-  video?.addEventListener('keydown', event => {
+  video?.addEventListener('keydown', (event) => {
     const key = (event as KeyboardEvent).key;
-    if (key === 'Enter' || key === ' ') (event.currentTarget as HTMLElement).click();
+    if (key === 'Enter' || key === ' ') {
+      event.preventDefault(); // evita que Espacio haga scroll de la página
+      (event.currentTarget as HTMLElement).click();
+    }
   });
 
+  /* ===== Fondo animado: globo OTC / P2P / FX ===== */
   (() => {
-    const canvas = document.getElementById('net') as HTMLCanvasElement | null;
-    if (!canvas) return;
+    const canvas = document.getElementById('globe') as HTMLCanvasElement | null;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    type Vec = [number, number, number];
+    type Hub = { code: string; cur: string; v: Vec };
+    type Pulse = { arc: number; t: number; speed: number; rev: boolean };
 
-    let width = 0;
-    let height = 0;
-    let points: { x: number; y: number; vx: number; vy: number }[] = [];
+    /* ---------- Configuración (ajustable) ---------- */
+    const LIME = '166,250,88';       // RGB del acento
+    const TILT = 0.38;               // inclinación del globo (radianes)
+    const ROTATION_SPEED = 0.0016;   // rad por frame; 0 = globo quieto
+    const DOT_COUNT = 1500;          // densidad de puntos de la esfera
+    const MAX_PULSES = 16;           // operaciones simultáneas
+    const ARC_STEPS = 48;            // suavidad de los arcos
+    const reduceMotion = matchMedia('(prefers-reduced-motion:reduce)').matches;
 
-    const resize = () => {
-      width = canvas.width = canvas.offsetWidth;
-      height = canvas.height = canvas.offsetHeight;
-      const count = Math.min(70, Math.floor(width * height / 22000));
-      points = Array.from({ length: count }, () => ({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - .5) * .35,
-        vy: (Math.random() - .5) * .35
-      }));
+    // Hubs financieros: [código ciudad, divisa, latitud, longitud]
+    const HUBS: [string, string, number, number][] = [
+      ['NYC', 'USD', 40.7, -74.0],
+      ['LON', 'GBP', 51.5, -0.1],
+      ['ZRH', 'CHF', 47.4, 8.5],
+      ['DXB', 'AED', 25.2, 55.3],
+      ['SIN', 'SGD', 1.3, 103.8],
+      ['HKG', 'HKD', 22.3, 114.2],
+      ['TYO', 'JPY', 35.7, 139.7],
+      ['SAO', 'BRL', -23.5, -46.6],
+      ['BUE', 'ARS', -34.6, -58.4],
+      ['MIA', 'USDC', 25.8, -80.2],
+      ['JNB', 'ZAR', -26.2, 28.0],
+      ['SYD', 'AUD', -33.9, 151.2],
+    ];
+
+    // Rutas entre hubs (índices de HUBS): cruzan continentes
+    const ROUTES: [number, number][] = [
+      [0, 1], [1, 2], [1, 3], [3, 4], [4, 5], [5, 6], [0, 9], [9, 8], [8, 7], [7, 0],
+      [0, 6], [2, 3], [3, 10], [4, 11], [1, 7], [8, 1], [5, 11], [10, 7],
+    ];
+
+    /* ---------- Geometría ---------- */
+    const toRad = (d: number) => (d * Math.PI) / 180;
+
+    /** lat/lon -> vector unitario 3D (sin rotar) */
+    const toVec = (lat: number, lon: number): Vec => {
+      const la = toRad(lat);
+      const lo = toRad(lon);
+      return [Math.cos(la) * Math.sin(lo), Math.sin(la), Math.cos(la) * Math.cos(lo)];
     };
 
-    const draw = () => {
-      ctx.clearRect(0, 0, width, height);
-      for (let i = 0; i < points.length; i++) {
-        const a = points[i];
-        a.x += a.vx;
-        a.y += a.vy;
-        if (a.x < 0 || a.x > width) a.vx *= -1;
-        if (a.y < 0 || a.y > height) a.vy *= -1;
-        ctx.fillStyle = 'rgba(166,250,88,.8)';
-        ctx.beginPath();
-        ctx.arc(a.x, a.y, 1.8, 0, 6.283);
-        ctx.fill();
-        for (let j = i + 1; j < points.length; j++) {
-          const b = points[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const distance = Math.hypot(dx, dy);
-          if (distance < 140) {
-            ctx.strokeStyle = 'rgba(166,250,88,' + (.28 * (1 - distance / 140)) + ')';
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-          }
-        }
+    // Puntos de la esfera (espiral de Fibonacci: distribución pareja)
+    const dots: Vec[] = Array.from({ length: DOT_COUNT }, (_, i) => {
+      const y = 1 - (i / (DOT_COUNT - 1)) * 2;
+      const r = Math.sqrt(1 - y * y);
+      const phi = i * Math.PI * (3 - Math.sqrt(5));
+      return [Math.cos(phi) * r, y, Math.sin(phi) * r];
+    });
+
+    // Meridianos y paralelos (cada 30°)
+    const graticule: Vec[][] = [];
+    for (let lat = -60; lat <= 60; lat += 30) {
+      const line: Vec[] = [];
+      for (let lon = -180; lon <= 180; lon += 6) line.push(toVec(lat, lon));
+      graticule.push(line);
+    }
+    for (let lon = -180; lon < 180; lon += 30) {
+      const line: Vec[] = [];
+      for (let lat = -90; lat <= 90; lat += 6) line.push(toVec(lat, lon));
+      graticule.push(line);
+    }
+
+    const hubs: Hub[] = HUBS.map(([code, cur, lat, lon]) => ({ code, cur, v: toVec(lat, lon) }));
+
+    /** Arco entre dos vectores (interpolación esférica) levantado sobre la superficie */
+    const buildArc = (a: Vec, b: Vec): Vec[] => {
+      const dot = Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
+      const omega = Math.acos(dot);
+      const sinO = Math.sin(omega) || 1;
+      const lift = 0.1 + omega * 0.1; // arcos más largos se elevan más
+      const pts: Vec[] = [];
+      for (let i = 0; i <= ARC_STEPS; i++) {
+        const t = i / ARC_STEPS;
+        const k1 = Math.sin((1 - t) * omega) / sinO;
+        const k2 = Math.sin(t * omega) / sinO;
+        const h = 1 + lift * Math.sin(Math.PI * t);
+        pts.push([
+          (k1 * a[0] + k2 * b[0]) * h,
+          (k1 * a[1] + k2 * b[1]) * h,
+          (k1 * a[2] + k2 * b[2]) * h,
+        ]);
       }
-      if (!matchMedia('(prefers-reduced-motion:reduce)').matches) requestAnimationFrame(draw);
+      return pts;
     };
+    const arcs = ROUTES.map(([i, j]) => buildArc(hubs[i].v, hubs[j].v));
+
+    /* ---------- Estado ---------- */
+    let w = 0;
+    let h = 0;
+    let cx = 0;
+    let cy = 0;
+    let R = 0;
+    let yaw = 3.3; // arranca mostrando América / Atlántico
+    let pulses: Pulse[] = [];
+    let raf = 0;
+
+    /** Ajusta el canvas al tamaño real (retina, tope 2x) y recalcula el globo */
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = canvas.offsetWidth;
+      h = canvas.offsetHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // El globo es más grande que el hero: queda "cortado" abajo, efecto horizonte
+      R = Math.min(w * 0.62, h * 0.78);
+      cx = w / 2;
+      cy = h * 0.58;
+    };
+
+    /** Rota un vector (yaw en Y, TILT en X) y lo proyecta a pantalla. z > 0 = lado visible */
+    const project = (v: Vec, cosY: number, sinY: number, cosT: number, sinT: number): Vec => {
+      const x1 = v[0] * cosY + v[2] * sinY;
+      const z1 = -v[0] * sinY + v[2] * cosY;
+      const y2 = v[1] * cosT - z1 * sinT;
+      const z2 = v[1] * sinT + z1 * cosT;
+      return [cx + R * x1, cy - R * y2, z2];
+    };
+
+    /** Crea una "operación": un pulso viajando por una ruta */
+    const spawnPulse = () => {
+      if (pulses.length >= MAX_PULSES) return;
+      pulses.push({
+        arc: (Math.random() * arcs.length) | 0,
+        t: 0,
+        speed: 0.006 + Math.random() * 0.008,
+        rev: Math.random() < 0.5, // la mitad viaja en sentido contrario
+      });
+    };
+
+    /* ---------- Dibujo ---------- */
+    const draw = (time = 0) => {
+      ctx.clearRect(0, 0, w, h);
+
+      if (!reduceMotion) yaw += ROTATION_SPEED;
+      const cosY = Math.cos(yaw);
+      const sinY = Math.sin(yaw);
+      const cosT = Math.cos(TILT);
+      const sinT = Math.sin(TILT);
+      const P = (v: Vec) => project(v, cosY, sinY, cosT, sinT);
+
+      // Halo atmosférico alrededor del globo
+      const halo = ctx.createRadialGradient(cx, cy, R * 0.92, cx, cy, R * 1.12);
+      halo.addColorStop(0, `rgba(${LIME},.12)`);
+      halo.addColorStop(1, `rgba(${LIME},0)`);
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 1.12, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Meridianos y paralelos (solo tramos del lado visible)
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(${LIME},.10)`;
+      for (const line of graticule) {
+        ctx.beginPath();
+        let pen = false;
+        for (const v of line) {
+          const p = P(v);
+          if (p[2] > 0) {
+            if (pen) ctx.lineTo(p[0], p[1]);
+            else ctx.moveTo(p[0], p[1]);
+            pen = true;
+          } else pen = false;
+        }
+        ctx.stroke();
+      }
+
+      // Puntos de la esfera: más brillantes al centro, tenues al borde
+      for (const d of dots) {
+        const p = P(d);
+        if (p[2] <= 0) continue;
+        ctx.fillStyle = `rgba(${LIME},${0.08 + p[2] * 0.32})`;
+        ctx.fillRect(p[0], p[1], 1.4, 1.4);
+      }
+
+      // Arcos entre hubs
+      ctx.lineWidth = 1.1;
+      ctx.strokeStyle = `rgba(${LIME},.30)`;
+      for (const arc of arcs) {
+        ctx.beginPath();
+        let pen = false;
+        for (const v of arc) {
+          const p = P(v);
+          if (p[2] > -0.05) {
+            if (pen) ctx.lineTo(p[0], p[1]);
+            else ctx.moveTo(p[0], p[1]);
+            pen = true;
+          } else pen = false;
+        }
+        ctx.stroke();
+      }
+
+      // Pulsos = operaciones viajando entre mesas
+      if (!reduceMotion && Math.random() < 0.06) spawnPulse();
+      pulses = pulses.filter((p) => (p.t += p.speed) < 1);
+      for (const pl of pulses) {
+        const idx = Math.min(ARC_STEPS, ((pl.rev ? 1 - pl.t : pl.t) * ARC_STEPS) | 0);
+        const p = P(arcs[pl.arc][idx]);
+        if (p[2] < 0) continue;
+        const g = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 10);
+        g.addColorStop(0, `rgba(${LIME},.95)`);
+        g.addColorStop(1, `rgba(${LIME},0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p[0], p[1], 10, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Hubs: punto + anillo que "respira" + etiqueta ciudad/divisa
+      ctx.font = '600 10px ui-monospace, SFMono-Regular, Menlo, monospace';
+      for (const hub of hubs) {
+        const p = P(hub.v);
+        if (p[2] < 0.05) continue;
+        const vis = Math.min(1, p[2] * 2.2); // se desvanece al llegar al borde
+        const breathe = (Math.sin(time / 900 + hub.v[0] * 6) + 1) / 2;
+
+        ctx.strokeStyle = `rgba(${LIME},${(0.18 + 0.3 * breathe) * vis})`;
+        ctx.beginPath();
+        ctx.arc(p[0], p[1], 6 + breathe * 6, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = `rgba(${LIME},${0.95 * vis})`;
+        ctx.beginPath();
+        ctx.arc(p[0], p[1], 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(${LIME},${0.75 * vis})`;
+        ctx.fillText(hub.code, p[0] + 12, p[1] - 1);
+        ctx.fillStyle = `rgba(${LIME},${0.4 * vis})`;
+        ctx.fillText(hub.cur, p[0] + 12, p[1] + 11);
+      }
+
+      if (!reduceMotion) raf = requestAnimationFrame(draw);
+    };
+
+    /* ---------- Arranque ---------- */
+    // Pausa la animación cuando el hero no es visible (ahorra batería/CPU)
+    const start = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(draw);
+    };
+    const stop = () => cancelAnimationFrame(raf);
 
     resize();
-    draw();
-    addEventListener('resize', resize);
+    if (reduceMotion) {
+      draw(); // un solo frame estático para usuarios con movimiento reducido
+    } else {
+      new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop())).observe(canvas);
+    }
+
+    let resizeTimer: number;
+    addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        resize();
+        if (reduceMotion) draw(); // en modo estático hay que redibujar a mano
+      }, 120);
+    });
   })();
 </script>
 
 <style>
+  /* ===== Contenedor del hero ===== */
   .hero {
+    position: relative; /* ancla de las capas absolutas (canvas, ::before, ::after, ticker) */
+    isolation: isolate; /* aísla los z-index de esta sección */
     min-height: 100vh;
     display: flex;
     align-items: center;
-    padding: 130px 0 90px;
-    overflow: hidden
+    padding: 130px 0 120px; /* abajo: deja lugar al marquee */
+    overflow: hidden;
   }
 
-  #net { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0 }
+  /* ===== Capa 0: glows + grilla estilo terminal financiera ===== */
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      /* glow lime arriba-izquierda */
+      radial-gradient(700px 480px at 12% 15%, rgba(166, 250, 88, 0.10), transparent 70%),
+      /* glow secundario abajo-derecha (más frío, da profundidad "bancaria") */
+      radial-gradient(800px 560px at 88% 85%, rgba(40, 140, 120, 0.12), transparent 70%),
+      /* grilla horizontal y vertical */
+      linear-gradient(rgba(166, 250, 88, 0.04) 1px, transparent 1px) 0 0 / 56px 56px,
+      linear-gradient(90deg, rgba(166, 250, 88, 0.04) 1px, transparent 1px) 0 0 / 56px 56px;
+    /* la grilla se desvanece hacia los bordes */
+    -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 30%, transparent 85%);
+    mask-image: radial-gradient(ellipse at 50% 50%, #000 30%, transparent 85%);
+  }
 
+  /* ===== Capa 0: canvas del globo ===== */
+  #globe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none; /* no bloquea clicks del contenido */
+  }
+
+  /* ===== Capa 0: viñeta (oscurece el centro para que el texto se lea + funde con la sección siguiente) ===== */
   .hero::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at 50% 40%, rgba(5, 5, 5, .1), var(--bg) 85%);
-    z-index: 0
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 50% 42%, rgba(5, 5, 5, 0.55) 0%, rgba(5, 5, 5, 0) 55%),
+      linear-gradient(to bottom, rgba(5, 5, 5, 0) 70%, var(--bg) 100%);
   }
 
-  .hero .wrap { position: relative; z-index: 1; text-align: center }
-  .hero h1 { margin-bottom: 28px }
-  .hero-box { max-width: 900px; margin: 0 auto 28px }
+  /* ===== Contenido (por encima de todas las capas de fondo) ===== */
+  .hero .wrap {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+  .hero h1 { margin-bottom: 28px; }
+  .hero-box { max-width: 900px; margin: 0 auto 28px; }
 
+  /* ===== Marquee de pares de divisas ===== */
+  .ticker {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    overflow: hidden;
+    border-top: 1px solid var(--line);
+    background: rgba(5, 5, 5, 0.6);
+    backdrop-filter: blur(6px);
+    /* se desvanece en los extremos */
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  }
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: ticker 45s linear infinite; /* lista duplicada: -50% = loop perfecto */
+  }
+  .ticker span {
+    padding: 14px 28px;
+    font: 500 0.78rem ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 0.08em;
+    color: var(--mute);
+    white-space: nowrap;
+  }
+  .ticker span b { color: var(--lime); font-weight: 600; }
+
+  @keyframes ticker {
+    to { transform: translateX(-50%); }
+  }
+
+  /* ===== Movimiento reducido: marquee quieto ===== */
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-track { animation: none; }
+  }
+
+  /* ===== Mobile ===== */
+  @media (max-width: 640px) {
+    .hero { padding: 110px 0 100px; }
+    .ticker span { padding: 12px 20px; }
+  }
+
+  /* ===== Video de presentación ===== */
   .video {
     position: relative;
-    aspect-ratio: 16/9;
+    aspect-ratio: 16 / 9;
     border-radius: 18px;
     border: 1px solid var(--line);
     background: linear-gradient(135deg, #0b1407, #050505);
     display: grid;
     place-items: center;
     cursor: pointer;
-    overflow: hidden
+    overflow: hidden;
   }
 
   .video span.play {
@@ -122,22 +464,27 @@
     display: grid;
     place-items: center;
     font-size: 2rem;
-    background: rgba(166, 250, 88, .1);
-    transition: .25s
+    background: rgba(166, 250, 88, 0.1);
+    transition: 0.25s;
   }
 
-  .video:hover span.play { background: var(--lime); box-shadow: 0 0 36px rgba(166, 250, 88, .5) }
-  .video:hover .ic { stroke: #050505; fill: #050505 }
-  .video .ic { fill: var(--lime) }
+  .video:hover span.play,
+  .video:focus-visible span.play { /* focus-visible: mismo feedback para teclado */
+    background: var(--lime);
+    box-shadow: 0 0 36px rgba(166, 250, 88, 0.5);
+  }
+  .video:hover .ic,
+  .video:focus-visible .ic { stroke: #050505; fill: #050505; }
+  .video .ic { fill: var(--lime); }
 
   .video em {
     position: absolute;
     bottom: 12px;
     left: 16px;
     font-style: normal;
-    font-size: .7rem;
-    letter-spacing: .25em;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
     color: var(--mute);
-    text-transform: uppercase
+    text-transform: uppercase;
   }
 </style>
