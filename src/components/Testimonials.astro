@@ -1,77 +1,159 @@
+---
+// Reemplazá video (y poster, opcional) por tus archivos reales.
+const testimonios = [
+  {
+    video: "public/video/IMG_4600.MOV",
+    poster: undefined,
+    texto: "Entré sin saber nada del tema y en pocas semanas ya estaba operando con confianza. El acompañamiento fue clave.",
+    nombre: "Lucía",
+    apellido: "Fernández",
+  },
+  {
+    video: "public/video/IMG_4600.MOV",
+    poster: undefined,
+    texto: "Lo que más valoro es la claridad: todo se explica paso a paso y sin vueltas. Lo recomiendo sin dudar.",
+    nombre: "Martín",
+    apellido: "Rodríguez",
+  },
+  {
+    video: "public/video/IMG_4600.MOV",
+    poster: undefined,
+    texto: "La comunidad es increíble. Siempre hay alguien dispuesto a ayudar y compartir lo que aprendió.",
+    nombre: "Camila",
+    apellido: "Gómez",
+  },
+  {
+    video: "public/video/IMG_4600.MOV",
+    poster: undefined,
+    texto: "Probé varias opciones antes y ninguna me dio los resultados que obtuve acá. Valió cada minuto.",
+    nombre: "Joaquín",
+    apellido: "Benítez",
+  },
+  {
+    video: "public/video/IMG_4600.MOV",
+    poster: undefined,
+    texto: "Me sentí acompañada desde el primer día. Hoy tengo herramientas que antes ni sabía que existían.",
+    nombre: "Valentina",
+    apellido: "Sosa",
+  },
+];
+---
+
 <section id="testimonios">
-    <div class="wrap">
-      <div class="head rv"><span class="eyebrow">Testimonios y eventos</span>
-        <h2>Lo que dicen <span class="lime">nuestros alumnos</span></h2>
+  <div class="wrap">
+    <div class="head rv">
+      <span class="eyebrow">Testimonios y eventos</span>
+      <h2>Lo que dicen <span class="lime">nuestros alumnos</span></h2>
+    </div>
+
+    <div class="car rv">
+      <div class="track" id="track">
+        {
+          testimonios.map((t) => (
+            <article class="card t">
+              <div class="vid">
+                <video
+                  src={t.video}
+                  poster={t.poster}
+                  preload="metadata"
+                  playsinline
+                />
+                <button class="play" type="button" aria-label="Reproducir video">
+                  <span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 4l14 8-14 8z" />
+                    </svg>
+                  </span>
+                </button>
+              </div>
+              <div class="info">
+                <p>“{t.texto}”</p>
+                <b class="nombre">
+                  {t.nombre} {t.apellido}
+                </b>
+              </div>
+            </article>
+          ))
+        }
       </div>
-      <div class="car rv">
-        <div class="track" id="track">
-          <article class="card t">
-            <div class="stars">★★★★★</div>
-            <p>“Testimonio de ejemplo. Acá va la experiencia real de un alumno con la comunidad.”</p>
-            <div class="who"><span class="av">A</span>
-              <div><b>Nombre Apellido</b><small>Alumno</small></div>
-            </div>
-          </article>
-          <article class="card t">
-            <div class="stars">★★★★★</div>
-            <p>“Testimonio de ejemplo. Contá qué cambió en su manera de operar y los resultados.”</p>
-            <div class="who"><span class="av">B</span>
-              <div><b>Nombre Apellido</b><small>Empresario</small></div>
-            </div>
-          </article>
-          <article class="card t">
-            <div class="stars">★★★★★</div>
-            <p>“Testimonio de ejemplo. Podés sumar capturas, videos o fotos de eventos.”</p>
-            <div class="who"><span class="av">C</span>
-              <div><b>Nombre Apellido</b><small>Comunidad</small></div>
-            </div>
-          </article>
-          <article class="card t">
-            <div class="stars">★★★★★</div>
-            <p>“Testimonio de ejemplo. Otra voz de la comunidad para completar el carrusel.”</p>
-            <div class="who"><span class="av">D</span>
-              <div><b>Nombre Apellido</b><small>Alumno</small></div>
-            </div>
-          </article>
-          <article class="card t">
-            <div class="stars">★★★★★</div>
-            <p>“Testimonio de ejemplo. Una experiencia más del evento presencial.”</p>
-            <div class="who"><span class="av">E</span>
-              <div><b>Nombre Apellido</b><small>Asistente</small></div>
-            </div>
-          </article>
-        </div>
-        <div class="nav-c">
-          <button id="prev" aria-label="Anterior"><svg class="ic"><use href="#i-left" /></svg></button>
-          <button id="next" aria-label="Siguiente"><svg class="ic"><use href="#i-right" /></svg></button>
-        </div>
+
+      <div class="nav-c">
+        <button id="prev" aria-label="Anterior">
+          <svg class="ic"><use href="#i-left"></use></svg>
+        </button>
+        <button id="next" aria-label="Siguiente">
+          <svg class="ic"><use href="#i-right"></use></svg>
+        </button>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
 <script>
-  const track = document.getElementById('track');
-  const next = document.getElementById('next');
-  const prev = document.getElementById('prev');
+  const track = document.getElementById("track") as HTMLElement | null;
+  const next = document.getElementById("next");
+  const prev = document.getElementById("prev");
 
   if (track && next && prev) {
-    const step = () => (track.querySelector<HTMLElement>('.t')?.offsetWidth ?? 0) + 20;
+    const cards = Array.from(track.querySelectorAll<HTMLElement>(".t"));
+
+    const step = () => {
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 20;
+      return (cards[0]?.offsetWidth ?? 0) + gap;
+    };
+    const atEnd = () => track.scrollLeft + track.clientWidth >= track.scrollWidth - 10;
 
     next.onclick = () => {
-      track.scrollBy({ left: step(), behavior: 'smooth' });
-      if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 10) {
-        track.scrollTo({ left: 0, behavior: 'smooth' });
-      }
+      if (atEnd()) track.scrollTo({ left: 0, behavior: "smooth" });
+      else track.scrollBy({ left: step(), behavior: "smooth" });
     };
 
     prev.onclick = () => {
-      track.scrollBy({ left: -step(), behavior: 'smooth' });
+      track.scrollBy({ left: -step(), behavior: "smooth" });
     };
+
+    // Video: un solo video a la vez
+    const pauseAll = (except?: HTMLVideoElement) => {
+      cards.forEach((c) => {
+        const v = c.querySelector("video");
+        if (v && v !== except) v.pause();
+      });
+    };
+
+    cards.forEach((card) => {
+      const v = card.querySelector("video") as HTMLVideoElement;
+      const play = card.querySelector(".play") as HTMLButtonElement;
+
+      play.addEventListener("click", () => {
+        pauseAll(v);
+        v.controls = true;
+        v.play();
+      });
+      v.addEventListener("play", () => {
+        pauseAll(v);
+        card.classList.add("playing");
+      });
+      v.addEventListener("pause", () => card.classList.remove("playing"));
+      v.addEventListener("ended", () => card.classList.remove("playing"));
+    });
+
+    // Pausa el video cuando su tarjeta sale de la vista
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) e.target.querySelector("video")?.pause();
+        });
+      },
+      { root: track, threshold: 0.5 }
+    );
+    cards.forEach((c) => io.observe(c));
   }
 </script>
 
 <style>
-  .car { position: relative }
+  .car {
+    position: relative;
+  }
 
   .track {
     display: flex;
@@ -79,30 +161,101 @@
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
-    padding: 6px 2px
+    padding: 6px 2px;
   }
 
-  .track::-webkit-scrollbar { display: none }
-  .t { flex: 0 0 calc((100% - 40px)/3); scroll-snap-align: start }
-  .who { display: flex; align-items: center; gap: 12px; margin-top: 18px }
+  .track::-webkit-scrollbar {
+    display: none;
+  }
 
-  .av {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 1.5px solid var(--lime);
+  .t {
+    flex: 0 0 calc((100% - 40px) / 3);
+    scroll-snap-align: start;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Video */
+  .vid {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    background: #000;
+  }
+
+  .vid video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .play {
+    position: absolute;
+    inset: 0;
     display: grid;
     place-items: center;
-    font-family: var(--fh);
-    font-size: 1.3rem;
-    color: var(--lime);
-    background: #0a1306
+    border: 0;
+    cursor: pointer;
+    background: linear-gradient(to top, rgba(5, 5, 5, 0.6), transparent 55%);
+    transition: opacity 0.2s;
   }
 
-  .who b { display: block; font-size: .92rem }
-  .who small { color: var(--mute); font-size: .75rem }
-  .stars { color: var(--lime); letter-spacing: 3px; margin-bottom: 10px }
-  .nav-c { display: flex; justify-content: center; gap: 12px; margin-top: 22px }
+  .play span {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--lime);
+    display: grid;
+    place-items: center;
+    transition: transform 0.2s;
+  }
+
+  .play:hover span {
+    transform: scale(1.08);
+  }
+
+  .play svg {
+    width: 22px;
+    height: 22px;
+    margin-left: 3px;
+    fill: var(--bg);
+  }
+
+  .t.playing .play {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Texto */
+  .info {
+    padding: 22px 22px 26px;
+  }
+
+  .info p {
+    line-height: 1.6;
+    color: var(--mute);
+    font-size: 0.95rem;
+  }
+
+  .nombre {
+    display: block;
+    margin-top: 18px;
+    font-family: var(--fh);
+    font-weight: 400;
+    font-size: 1.5rem;
+    letter-spacing: 0.05em;
+    color: var(--lime);
+  }
+
+  /* Navegación */
+  .nav-c {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 22px;
+  }
 
   .nav-c button {
     width: 46px;
@@ -115,13 +268,26 @@
     display: grid;
     place-items: center;
     font-size: 1.1rem;
-    transition: .2s
+    transition: 0.2s;
   }
 
-  .nav-c button:hover { background: var(--lime) }
-  .nav-c button:hover .ic { stroke: #050505 }
+  .nav-c button:hover {
+    background: var(--lime);
+  }
+
+  .nav-c button:hover .ic {
+    stroke: var(--bg);
+  }
 
   @media (max-width: 860px) {
-    .t { flex-basis: 88% }
+    .t {
+      flex-basis: 88%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .track {
+      scroll-behavior: auto;
+    }
   }
 </style>

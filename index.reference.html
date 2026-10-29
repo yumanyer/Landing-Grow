@@ -3,259 +3,295 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tu camino hacia la libertad financiera</title>
+<title>Carrusel de testimonios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* Variables: si lo integrás a tu sitio, borrá este bloque y usá las tuyas */
   :root {
-    --lime: #a6fa58;
-    --bg: #060807;
-    --card: #0c100d;
-    --white: #f2f4ef;
-    --muted: #9ba39a;
-    --line: rgba(255, 255, 255, .14);
+    --lime: #A6FA58;
+    --bg: #050505;
+    --white: #FFFFFF;
+    --surf: #0d110a;
+    --line: rgba(166, 250, 88, .35);
+    --mute: rgba(255, 255, 255, .72);
     --fh: "Bebas Neue", "Arial Narrow", Impact, sans-serif;
-    --fb: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --fb: "Montserrat", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    color-scheme: dark;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px)
   }
-  * { box-sizing: border-box }
+  :root { --gap: 24px; --pv: 1; /* tarjetas visibles */ }
+  @media (min-width: 640px)  { :root { --pv: 2; } }
+  @media (min-width: 1024px) { :root { --pv: 3; } }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; }
   body {
-    margin: 0;
-    background:
-      radial-gradient(900px 500px at 50% -10%, rgba(166, 250, 88, .07), transparent 70%),
-      radial-gradient(rgba(255, 255, 255, .045) 1px, transparent 1px) 0 0 / 28px 28px,
-      var(--bg);
-    color: var(--white);
     font-family: var(--fb);
-    line-height: 1.55;
+    background: var(--bg);
+    color: var(--white);
+    padding: 64px 20px;
   }
 
-  #roadmap { padding: 90px 0 130px }
-  .wrap { width: min(1000px, 92%); margin: 0 auto }
-  .head { text-align: center; margin-bottom: 80px }
-  .head h2 { font-family: var(--fh); font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 400; letter-spacing: .02em; margin: 0 }
-  .lime { color: var(--lime) }
-
-  /* ---------- Recorrido (según boceto) ----------
-     Fila 1: card 1 izquierda, card 2 derecha más abajo.
-     Fila 2: card 3 izquierda, card 4 derecha más abajo. */
-  .road {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 80px;
-    row-gap: 160px;
-    align-items: start;
+  .testimonios { max-width: 1120px; margin: 0 auto; }
+  .testimonios h2 {
+    font-family: var(--fh);
+    font-size: clamp(2.6rem, 7vw, 4.4rem);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: .02em;
+    max-width: 16ch;
+    margin-bottom: 40px;
   }
-  .step:nth-of-type(1) { grid-column: 1; grid-row: 1 }
-  .step:nth-of-type(2) { grid-column: 2; grid-row: 1; margin-top: 110px }
-  .step:nth-of-type(3) { grid-column: 1; grid-row: 2 }
-  .step:nth-of-type(4) { grid-column: 2; grid-row: 2; margin-top: 110px }
 
-  /* Conexiones (SVG generado por JS, detrás de las cards) */
-  .road > .rpath { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; overflow: visible }
-  .pbase { fill: none; stroke: rgba(166, 250, 88, .22); stroke-width: 2.5; stroke-dasharray: 2 10; stroke-linecap: round }
-  .pprog { fill: none; stroke: var(--lime); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px var(--lime)) }
-
-  /* ---------- Cards ---------- */
+  /* Carrusel */
+  .viewport { overflow: hidden; touch-action: pan-y; }
+  .track {
+    display: flex;
+    gap: var(--gap);
+    transition: transform .45s cubic-bezier(.3, .7, .2, 1);
+  }
   .card {
-    position: relative; z-index: 1;
-    background: linear-gradient(180deg, #0f1410, var(--card));
-    border: 1.5px solid var(--line);
-    border-radius: 22px;
-    padding: 30px 28px 30px;
-    transition: border-color .5s, box-shadow .5s, opacity .7s, transform .7s;
+    flex: 0 0 calc((100% - var(--gap) * (var(--pv) - 1)) / var(--pv));
+    background: var(--surf);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  .card h3 { font-family: var(--fh); font-weight: 400; font-size: 1.75rem; letter-spacing: .02em; margin: 0 0 8px }
-  .card p { margin: 0; font-size: .95rem; color: var(--muted) }
-  .ic { width: 34px; height: 34px; margin-bottom: 12px; color: rgba(166, 250, 88, .55); transition: color .5s, filter .5s }
 
-  .node {
-    position: absolute; top: -18px; left: 22px;
-    width: 36px; height: 36px; border-radius: 50%;
+  /* Video */
+  .video-wrap {
+    position: relative;
+    aspect-ratio: 9 / 12;
+    background: #000;
+  }
+  .video-wrap video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .play {
+    position: absolute; inset: 0;
     display: grid; place-items: center;
-    background: var(--bg); border: 2px solid var(--line);
-    font-family: var(--fh); font-size: 1.2rem; color: var(--muted);
-    transition: .5s;
+    background: linear-gradient(to top, rgba(5,5,5,.6), transparent 55%);
+    border: 0; cursor: pointer;
+    transition: opacity .2s;
+  }
+  .play span {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--lime); display: grid; place-items: center;
+    transition: transform .2s;
+  }
+  .play:hover span { transform: scale(1.08); }
+  .play svg { width: 22px; height: 22px; margin-left: 3px; fill: var(--bg); }
+  .card.playing .play { opacity: 0; pointer-events: none; }
+
+  /* Texto */
+  .info { padding: 22px 22px 26px; }
+  .info p { line-height: 1.6; color: var(--mute); font-size: .95rem; }
+  .info h3 {
+    margin-top: 18px;
+    font-family: var(--fh);
+    font-size: 1.6rem;
+    font-weight: 400;
+    letter-spacing: .05em;
+    color: var(--lime);
   }
 
-  /* Encendido */
-  .step.on { border-color: rgba(166, 250, 88, .55); box-shadow: 0 0 0 1px rgba(166, 250, 88, .12), 0 0 46px rgba(166, 250, 88, .08) }
-  .step.on .ic { color: var(--lime); filter: drop-shadow(0 0 6px rgba(166, 250, 88, .6)) }
-  .step.on .node { background: var(--lime); color: #050505; border-color: var(--lime); box-shadow: 0 0 20px var(--lime) }
-
-  .rv { opacity: 0; transform: translateY(24px) }
-  .rv.in { opacity: 1; transform: none }
-
-  /* ---------- Mobile: una columna, camino por la izquierda ---------- */
-  @media (max-width: 860px) {
-    .road { grid-template-columns: 1fr; row-gap: 64px }
-    .step:nth-of-type(n) { grid-column: 1; grid-row: auto; margin: 0 0 0 56px }
-    .node { top: 22px; left: -56px }
-    .head { margin-bottom: 56px }
+  /* Controles */
+  .controls {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 28px;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .rv { opacity: 1; transform: none }
-    .card, .node, .ic { transition: none }
+  .dots { display: flex; gap: 8px; }
+  .dots button {
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 0; padding: 0; cursor: pointer;
+    background: rgba(255, 255, 255, .2);
+    transition: background .2s, width .2s;
   }
+  .dots button[aria-current="true"] { background: var(--lime); width: 26px; border-radius: 6px; }
+  .arrows { display: flex; gap: 10px; }
+  .arrows button {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: 1px solid var(--lime); background: transparent; color: var(--lime);
+    cursor: pointer; display: grid; place-items: center;
+    transition: background .2s, color .2s;
+  }
+  .arrows button:hover:not(:disabled) { background: var(--lime); color: var(--bg); }
+  .arrows button:disabled { opacity: .3; cursor: default; }
+  .arrows svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+  button:focus-visible { outline: 3px solid var(--lime); outline-offset: 3px; }
+
+  @media (prefers-reduced-motion: reduce) { .track { transition: none; } }
 </style>
 </head>
 <body>
 
-<!-- Íconos (reemplazá por los #i-... de tu sitio si ya los tenés) -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14.8c2 .7 3.2 2.4 3.5 5.2"/></symbol>
-  <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M9 8h6"/></symbol>
-  <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
-  <symbol id="i-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h15l-4-4M20 16H5l4 4"/></symbol>
-</svg>
+<section class="testimonios" aria-roledescription="carrusel" aria-label="Testimonios">
+  <h2>Lo que cuentan quienes ya lo probaron</h2>
 
-<section id="roadmap">
-  <div class="wrap">
-    <div class="head">
-      <h2>Tu camino hacia la <span class="lime">libertad financiera</span></h2>
+  <div class="viewport">
+    <div class="track" id="track">
+
+      <!-- Reemplazá src por tus videos y agregá poster="..." si querés portada -->
+      <article class="card">
+        <div class="video-wrap">
+          <video src="public/video/IMG_4600.MOV" preload="metadata" playsinline></video>
+          <button class="play" aria-label="Reproducir video"><span><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span></button>
+        </div>
+        <div class="info">
+          <p>Entré sin saber nada del tema y en pocas semanas ya estaba operando con confianza. El acompañamiento fue clave.</p>
+          <h3>Lucía Fernández</h3>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="video-wrap">
+          <video src="public/video/IMG_4600.MOV" preload="metadata" playsinline></video>
+          <button class="play" aria-label="Reproducir video"><span><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span></button>
+        </div>
+        <div class="info">
+          <p>Lo que más valoro es la claridad: todo se explica paso a paso y sin vueltas. Lo recomiendo sin dudar.</p>
+          <h3>Martín Rodríguez</h3>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="video-wrap">
+          <video src="public/video/IMG_4600.MOV" preload="metadata" playsinline></video>
+          <button class="play" aria-label="Reproducir video"><span><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span></button>
+        </div>
+        <div class="info">
+          <p>La comunidad es increíble. Siempre hay alguien dispuesto a ayudar y compartir lo que aprendió.</p>
+          <h3>Camila Gómez</h3>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="video-wrap">
+          <video src="public/video/IMG_4600.MOV" preload="metadata" playsinline></video>
+          <button class="play" aria-label="Reproducir video"><span><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span></button>
+        </div>
+        <div class="info">
+          <p>Probé varias opciones antes y ninguna me dio los resultados que obtuve acá. Valió cada minuto.</p>
+          <h3>Joaquín Benítez</h3>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="video-wrap">
+          <video src="public/video/IMG_4600.MOV" preload="metadata" playsinline></video>
+          <button class="play" aria-label="Reproducir video"><span><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span></button>
+        </div>
+        <div class="info">
+          <p>Me sentí acompañada desde el primer día. Hoy tengo herramientas que antes ni sabía que existían.</p>
+          <h3>Valentina Sosa</h3>
+        </div>
+      </article>
+
     </div>
+  </div>
 
-    <div class="road" id="road">
-      <article class="card step rv" id="nosotros">
-        <span class="node">1</span>
-        <svg class="ic"><use href="#i-users"/></svg>
-        <h3>Quiénes somos</h3>
-        <p>Somos una comunidad de personas que operan mercados internacionales todos los días. Texto de ejemplo: contá la historia, el equipo y la experiencia detrás de la marca.</p>
-      </article>
-
-      <article class="card step rv">
-        <span class="node">2</span>
-        <svg class="ic"><use href="#i-book"/></svg>
-        <h3>Qué enseñamos</h3>
-        <p>Arbitraje, P2P, mesa OTC e intercambio de divisas, con método paso a paso. Texto de ejemplo: describí el programa, los formatos y el acompañamiento.</p>
-      </article>
-
-      <article class="card step rv">
-        <span class="node">3</span>
-        <svg class="ic"><use href="#i-target"/></svg>
-        <h3>Qué problema resolvemos</h3>
-        <p>Tu dinero está quieto o se pierde en intermediarios. Texto de ejemplo: describí el dolor real del cliente, la inflación, las comisiones y la falta de acceso a mercados globales.</p>
-      </article>
-
-      <article class="card step rv">
-        <span class="node">4</span>
-        <svg class="ic"><use href="#i-swap"/></svg>
-        <h3>Lógica del negocio + resultados</h3>
-        <p>Detectamos diferencias entre mercados, operamos P2P y OTC con contrapartes verificadas y capitalizamos el resultado. Texto de ejemplo: explicá el flujo real de una operación.</p>
-      </article>
+  <div class="controls">
+    <div class="dots" id="dots" role="tablist" aria-label="Elegir posición"></div>
+    <div class="arrows">
+      <button id="prev" aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button id="next" aria-label="Siguiente"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
   </div>
 </section>
 
 <script>
-(function () {
-  var road = document.getElementById('road');
-  if (!road) return;
+(() => {
+  const track = document.getElementById('track');
+  const cards = [...track.children];
+  const dotsEl = document.getElementById('dots');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  let index = 0;
 
-  var steps = Array.prototype.slice.call(road.querySelectorAll('.step'));
-  var NS = 'http://www.w3.org/2000/svg';
-  var svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('class', 'rpath');
-  svg.setAttribute('aria-hidden', 'true');
-  road.insertBefore(svg, road.firstChild);
+  const perView = () =>
+    parseInt(getComputedStyle(document.documentElement).getPropertyValue('--pv'), 10) || 1;
+  const maxIndex = () => Math.max(0, cards.length - perView());
 
-  var R = 18;           // radio de las esquinas
-  var segs = [];        // una conexión por tramo: 1→2, 2→3, 3→4
-  var triggers = [];    // posición de scroll en la que se enciende cada nodo
-
-  function box(el) {
-    return { l: el.offsetLeft, t: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight,
-             r: el.offsetLeft + el.offsetWidth, b: el.offsetTop + el.offsetHeight };
+  function pauseAll(except) {
+    cards.forEach(c => {
+      const v = c.querySelector('video');
+      if (v !== except) { v.pause(); c.classList.remove('playing'); }
+    });
   }
 
-  // Recorrido ortogonal con esquina redondeada: horizontal hasta x1 y luego baja hasta y1
-  function hv(x0, y0, x1, y1) {
-    var s = x1 > x0 ? 1 : -1;
-    return 'M' + x0 + ' ' + y0 + 'L' + (x1 - s * R) + ' ' + y0 +
-           'Q' + x1 + ' ' + y0 + ' ' + x1 + ' ' + (y0 + R) + 'L' + x1 + ' ' + y1;
-  }
-
-  function makeSeg() {
-    var base = document.createElementNS(NS, 'path');
-    var prog = document.createElementNS(NS, 'path');
-    base.setAttribute('class', 'pbase');
-    prog.setAttribute('class', 'pprog');
-    svg.appendChild(base);
-    svg.appendChild(prog);
-    return { base: base, prog: prog, len: 0 };
-  }
-
-  function drawRoad() {
-    var width = road.offsetWidth, height = road.offsetHeight;
-    var mobile = window.innerWidth <= 860;
-    var b = steps.map(box);
-    var defs = [];
-
-    if (mobile) {
-      // Camino recto por la izquierda, de nodo a nodo
-      for (var i = 0; i < 3; i++) {
-        defs.push('M18 ' + (b[i].t + 40) + 'L18 ' + (b[i + 1].t + 40));
-      }
-      triggers = b.map(function (x) { return x.t + 40 });
-    } else {
-      // 1 → 2: sale por la derecha de la card 1 (arriba) y baja a la card 2
-      defs.push(hv(b[0].r, b[0].t + 30, b[1].l + b[1].w * .6, b[1].t));
-      // 2 → 3: sale por la izquierda de la card 2 (abajo) y baja a la card 3
-      defs.push(hv(b[1].l, b[1].b - 20, b[2].l + b[2].w * .35, b[2].t));
-      // 3 → 4: sale por la derecha de la card 3 (arriba) y baja a la card 4
-      defs.push(hv(b[2].r, b[2].t + 30, b[3].l + b[3].w * .3, b[3].t));
-      // Las cards de la derecha están más abajo: se encienden un poco después
-      triggers = [b[0].t + 40, b[1].t + 40 + 60, b[2].t + 40, b[3].t + 40 + 60];
+  function buildDots() {
+    dotsEl.innerHTML = '';
+    for (let i = 0; i <= maxIndex(); i++) {
+      const b = document.createElement('button');
+      b.setAttribute('aria-label', 'Ir a la posición ' + (i + 1));
+      b.addEventListener('click', () => go(i));
+      dotsEl.appendChild(b);
     }
-
-    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-    svg.setAttribute('width', width);
-    svg.setAttribute('height', height);
-
-    while (segs.length < defs.length) segs.push(makeSeg());
-    defs.forEach(function (d, i) {
-      var s = segs[i];
-      s.base.setAttribute('d', d);
-      s.prog.setAttribute('d', d);
-      s.len = s.prog.getTotalLength();
-      s.prog.style.strokeDasharray = s.len;
-    });
-    onScroll();
   }
 
-  function onScroll() {
-    var vh = window.innerHeight;
-    var line = vh * .6 - road.getBoundingClientRect().top;   // posición de la "línea de lectura" dentro del recorrido
-
-    // Cada conexión se llena entre el encendido de su nodo de origen y el de su nodo de destino
-    segs.forEach(function (s, i) {
-      var p = (line - triggers[i]) / (triggers[i + 1] - triggers[i]);
-      p = Math.max(0, Math.min(1, p));
-      s.prog.style.strokeDashoffset = s.len * (1 - p);
-      s.prog.style.opacity = p > 0 ? 1 : 0;
-    });
-    // Cada nodo (card) se enciende cuando el recorrido llega a él
-    steps.forEach(function (el, i) {
-      el.classList.toggle('on', line >= triggers[i]);
-    });
+  function go(i) {
+    index = Math.min(Math.max(i, 0), maxIndex());
+    const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+    const cardW = cards[0].getBoundingClientRect().width;
+    track.style.transform = `translateX(${-index * (cardW + gap)}px)`;
+    [...dotsEl.children].forEach((d, n) =>
+      d.setAttribute('aria-current', n === index ? 'true' : 'false'));
+    prev.disabled = index === 0;
+    next.disabled = index === maxIndex();
+    pauseAll(null);
   }
 
-  var items = document.querySelectorAll('.rv');
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) }
-      });
-    }, { threshold: .12 });
-    items.forEach(function (el) { io.observe(el) });
-  } else {
-    items.forEach(function (el) { el.classList.add('in') });
-  }
+  // Video: un solo video a la vez
+  cards.forEach(card => {
+    const v = card.querySelector('video');
+    const play = card.querySelector('.play');
+    const toggle = () => {
+      if (v.paused) { pauseAll(v); v.controls = true; v.play(); card.classList.add('playing'); }
+      else { v.pause(); card.classList.remove('playing'); }
+    };
+    play.addEventListener('click', toggle);
+    v.addEventListener('ended', () => card.classList.remove('playing'));
+    v.addEventListener('pause', () => card.classList.remove('playing'));
+    v.addEventListener('play', () => card.classList.add('playing'));
+  });
 
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', drawRoad);
-  window.addEventListener('load', drawRoad);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawRoad);
-  drawRoad();
+  prev.addEventListener('click', () => go(index - 1));
+  next.addEventListener('click', () => go(index + 1));
+
+  // Teclado
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') go(index - 1);
+    if (e.key === 'ArrowRight') go(index + 1);
+  });
+
+  // Swipe táctil / mouse
+  let startX = null;
+  const viewport = track.parentElement;
+  viewport.addEventListener('pointerdown', e => { startX = e.clientX; });
+  viewport.addEventListener('pointerup', e => {
+    if (startX === null) return;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 50) go(index + (dx < 0 ? 1 : -1));
+    startX = null;
+  });
+  viewport.addEventListener('pointercancel', () => { startX = null; });
+
+  // Responsive
+  let lastPv = perView();
+  window.addEventListener('resize', () => {
+    if (perView() !== lastPv) { lastPv = perView(); buildDots(); }
+    go(index);
+  });
+
+  buildDots();
+  go(0);
 })();
 </script>
 </body>
