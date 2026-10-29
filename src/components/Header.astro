@@ -19,3 +19,110 @@
 
   <a class="wa" href="https://wa.me/549XXXXXXXXXX" target="_blank" rel="noopener"
     aria-label="Escribinos por WhatsApp"><svg class="ic"><use href="#i-wa" /></svg></a>
+
+<script>
+  const burger = document.getElementById('burger');
+  const links = document.getElementById('links');
+
+  if (burger && links) {
+    burger.addEventListener('click', () => {
+      const open = links.classList.toggle('open');
+      burger.setAttribute('aria-expanded', String(open));
+    });
+
+    links.addEventListener('click', event => {
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'A') links.classList.remove('open');
+    });
+  }
+</script>
+
+<style>
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    padding-top: env(safe-area-inset-top, 0px);
+    background: rgba(5, 5, 5, .82);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(166, 250, 88, .15)
+  }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 68px }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--white);
+    font-family: var(--fh);
+    font-size: 1.5rem;
+    line-height: .9
+  }
+
+  .logo img { width: 64px; height: 64px; object-fit: contain }
+  .logo small { display: block; font-size: 1.5rem }
+  .links { display: flex; align-items: center; gap: 28px }
+
+  .links a:not(.btn) {
+    color: var(--white);
+    text-decoration: none;
+    font-size: .78rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    transition: .2s
+  }
+
+  .links a:not(.btn):hover { color: var(--lime) }
+
+  .burger {
+    display: none;
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    width: 44px;
+    height: 44px;
+    color: var(--lime);
+    cursor: pointer
+  }
+
+  .wa {
+    position: fixed;
+    left: 18px;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    z-index: 60;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--lime);
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 24px rgba(166, 250, 88, .4);
+    font-size: 1.7rem;
+    transition: .25s
+  }
+
+  .wa:hover { transform: scale(1.08) }
+  .wa .ic { stroke: #050505; stroke-width: 1.9 }
+
+  @media (max-width: 860px) {
+    .links {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      background: var(--bg);
+      padding: 22px;
+      gap: 18px;
+      border-bottom: 1px solid var(--line);
+      display: none
+    }
+
+    .links.open { display: flex }
+    .burger { display: block }
+  }
+</style>

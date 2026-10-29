@@ -13,3 +13,131 @@
       </a>
     </div>
   </header>
+
+<script>
+  const video = document.querySelector<HTMLElement>('.video');
+  video?.addEventListener('keydown', event => {
+    const key = (event as KeyboardEvent).key;
+    if (key === 'Enter' || key === ' ') (event.currentTarget as HTMLElement).click();
+  });
+
+  (() => {
+    const canvas = document.getElementById('net') as HTMLCanvasElement | null;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let width = 0;
+    let height = 0;
+    let points: { x: number; y: number; vx: number; vy: number }[] = [];
+
+    const resize = () => {
+      width = canvas.width = canvas.offsetWidth;
+      height = canvas.height = canvas.offsetHeight;
+      const count = Math.min(70, Math.floor(width * height / 22000));
+      points = Array.from({ length: count }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - .5) * .35,
+        vy: (Math.random() - .5) * .35
+      }));
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+      for (let i = 0; i < points.length; i++) {
+        const a = points[i];
+        a.x += a.vx;
+        a.y += a.vy;
+        if (a.x < 0 || a.x > width) a.vx *= -1;
+        if (a.y < 0 || a.y > height) a.vy *= -1;
+        ctx.fillStyle = 'rgba(166,250,88,.8)';
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, 1.8, 0, 6.283);
+        ctx.fill();
+        for (let j = i + 1; j < points.length; j++) {
+          const b = points[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance < 140) {
+            ctx.strokeStyle = 'rgba(166,250,88,' + (.28 * (1 - distance / 140)) + ')';
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+      if (!matchMedia('(prefers-reduced-motion:reduce)').matches) requestAnimationFrame(draw);
+    };
+
+    resize();
+    draw();
+    addEventListener('resize', resize);
+  })();
+</script>
+
+<style>
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 130px 0 90px;
+    overflow: hidden
+  }
+
+  #net { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0 }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgba(5, 5, 5, .1), var(--bg) 85%);
+    z-index: 0
+  }
+
+  .hero .wrap { position: relative; z-index: 1; text-align: center }
+  .hero h1 { margin-bottom: 28px }
+  .hero-box { max-width: 900px; margin: 0 auto 28px }
+
+  .video {
+    position: relative;
+    aspect-ratio: 16/9;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: linear-gradient(135deg, #0b1407, #050505);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    overflow: hidden
+  }
+
+  .video span.play {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: 2px solid var(--lime);
+    display: grid;
+    place-items: center;
+    font-size: 2rem;
+    background: rgba(166, 250, 88, .1);
+    transition: .25s
+  }
+
+  .video:hover span.play { background: var(--lime); box-shadow: 0 0 36px rgba(166, 250, 88, .5) }
+  .video:hover .ic { stroke: #050505; fill: #050505 }
+  .video .ic { fill: var(--lime) }
+
+  .video em {
+    position: absolute;
+    bottom: 12px;
+    left: 16px;
+    font-style: normal;
+    font-size: .7rem;
+    letter-spacing: .25em;
+    color: var(--mute);
+    text-transform: uppercase
+  }
+</style>

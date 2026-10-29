@@ -10,3 +10,24 @@
       </div>
     </div>
   </section>
+
+<style>
+  .legend { padding: 60px 0 }
+
+  .legend .card {
+    padding: clamp(28px, 6vw, 64px);
+    text-align: center;
+    background: linear-gradient(160deg, #0f1a09, #070a05)
+  }
+
+  .legend p {
+    font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+    color: var(--white);
+    max-width: 820px;
+    margin: 0 auto 1rem;
+    font-weight: 500
+  }
+
+  .legend p:last-child { margin: 0 }
+  .legend .ic { font-size: 2.4rem; margin-bottom: 16px }
+</style>

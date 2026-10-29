@@ -48,3 +48,80 @@
       </div>
     </div>
   </section>
+
+<script>
+  const track = document.getElementById('track');
+  const next = document.getElementById('next');
+  const prev = document.getElementById('prev');
+
+  if (track && next && prev) {
+    const step = () => (track.querySelector<HTMLElement>('.t')?.offsetWidth ?? 0) + 20;
+
+    next.onclick = () => {
+      track.scrollBy({ left: step(), behavior: 'smooth' });
+      if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 10) {
+        track.scrollTo({ left: 0, behavior: 'smooth' });
+      }
+    };
+
+    prev.onclick = () => {
+      track.scrollBy({ left: -step(), behavior: 'smooth' });
+    };
+  }
+</script>
+
+<style>
+  .car { position: relative }
+
+  .track {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding: 6px 2px
+  }
+
+  .track::-webkit-scrollbar { display: none }
+  .t { flex: 0 0 calc((100% - 40px)/3); scroll-snap-align: start }
+  .who { display: flex; align-items: center; gap: 12px; margin-top: 18px }
+
+  .av {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid var(--lime);
+    display: grid;
+    place-items: center;
+    font-family: var(--fh);
+    font-size: 1.3rem;
+    color: var(--lime);
+    background: #0a1306
+  }
+
+  .who b { display: block; font-size: .92rem }
+  .who small { color: var(--mute); font-size: .75rem }
+  .stars { color: var(--lime); letter-spacing: 3px; margin-bottom: 10px }
+  .nav-c { display: flex; justify-content: center; gap: 12px; margin-top: 22px }
+
+  .nav-c button {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--lime);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 1.1rem;
+    transition: .2s
+  }
+
+  .nav-c button:hover { background: var(--lime) }
+  .nav-c button:hover .ic { stroke: #050505 }
+
+  @media (max-width: 860px) {
+    .t { flex-basis: 88% }
+  }
+</style>

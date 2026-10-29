@@ -14,11 +14,13 @@ const { title = 'Grow Your Money – Comunidad de Arbitraje Internacional' } = A
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
   </head>
   <body>
     <IconSprite />
     <slot />
-    <script is:inline>document.documentElement.classList.add('js');</script>
-    <script is:inline src="/landing.js"></script>
+    <script>
+      import '../scripts/global.js';
+    </script>
   </body>
 </html>
