@@ -101,6 +101,47 @@
             rel="noopener">Consultar programa <span>→</span></a>
         </div>
       </article>
+
+      <!-- Nivel 03: Charla con Iván -->
+      <article class="product-modern-card rv">
+        <div>
+          <div class="product-card-top">
+            <span class="product-icon"
+              ><svg class="ic"><use href="#i-users"></use></svg></span
+            >
+            <span class="product-level">Nivel 03 // Charla con Iván</span>
+          </div>
+          <h3>Charla con Iván</h3>
+          <p>
+            <!-- TODO (PLACEHOLDER): descripción real del servicio -->
+            [Completar: de qué trata la charla y para quién es.]
+          </p>
+          <ul class="product-features">
+            <!-- TODO (PLACEHOLDER): reemplazar por las prestaciones reales -->
+            <li>
+              <svg class="ic"><use href="#i-check"></use></svg><span
+                >[Completar: duración y formato (videollamada, presencial, etc.)]</span>
+            </li>
+            <li>
+              <svg class="ic"><use href="#i-check"></use></svg><span
+                >[Completar: qué temas se tratan]</span>
+            </li>
+            <li>
+              <svg class="ic"><use href="#i-check"></use></svg><span
+                >[Completar: qué se lleva la persona al terminar]</span>
+            </li>
+          </ul>
+        </div>
+        <div class="product-action">
+          <!-- TODO (PLACEHOLDER): precio definitivo -->
+          <div class="product-price">USD [PRECIO]</div>
+          <a
+            class="product-button"
+            href="https://wa.me/549XXXXXXXXXX"
+            target="_blank"
+            rel="noopener">Reservar charla</a>
+        </div>
+      </article>
     </div>
 
     <div class="comparison rv">
@@ -203,7 +244,7 @@
   }
   .products-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 servicios */
     gap: 18px;
     align-items: stretch;
   }
@@ -445,9 +486,15 @@
   .comparison .muted-cell {
     color: rgba(255, 255, 255, 0.22);
   }
+
+  /* Pantallas medianas: con 3 tarjetas, 2 columnas dejarían una suelta,
+     así que pasa a una sola columna centrada */
   @media (max-width: 1080px) {
     .products-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
+      gap: 30px; /* más aire: el badge "Más elegido" sobresale arriba de la tarjeta */
+      max-width: 620px;
+      margin: 0 auto;
     }
     .product-featured {
       transform: none;
