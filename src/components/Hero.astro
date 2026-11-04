@@ -16,10 +16,34 @@ const PAIRS = [
   'USD/JPY', 'USD/AED', 'EUR/CHF', 'USDT/ARS', 'USD/SGD', 'AUD/USD', 'USD/ZAR',
 ];
 
-// Se duplica la lista: el track se mueve -50% y el loop queda continuo
-const TRACK = [...PAIRS, ...PAIRS].map((pair) => {
-  const [base, quote] = pair.split('/');
-  return { base, quote };
+// Cuántas veces se repite la lista dentro de UN grupo.
+// Regla: el ancho de un grupo debe ser >= al de la pantalla más grande a soportar.
+// 14 pares ≈ 1500px -> x3 ≈ 4500px (cubre hasta 4K sin huecos).
+const REPEAT = 3;
+
+// Velocidad constante sin importar cuántas repeticiones haya:
+// 15s por cada repetición de la lista (≈ 100px/s).
+const DURATION = REPEAT * 15; // segundos
+
+// Divisa -> código ISO 3166-1 del país (para la bandera en flagcdn.com).
+// EUR usa "eu" (bandera de la Unión Europea).
+const FLAG_ISO: Record<string, string> = {
+  USD: 'us', EUR: 'eu', GBP: 'gb', CHF: 'ch', JPY: 'jp', AED: 'ae',
+  SGD: 'sg', AUD: 'au', BRL: 'br', ARS: 'ar', ZAR: 'za',
+};
+
+// Cripto: no tienen país, se muestra una "moneda" con su símbolo
+const COIN_SYMBOL: Record<string, string> = { USDC: '$', USDT: '₮', BTC: '₿' };
+
+// Un grupo = la lista repetida REPEAT veces.
+// Cada par se descompone en 2 "patas" (base y cotizada), cada una con su bandera o símbolo.
+const GROUP = Array.from({ length: REPEAT }, () => PAIRS).flat().map((pair) => {
+  const legs = pair.split('/').map((code) => ({
+    code,
+    iso: FLAG_ISO[code],          // undefined si es cripto
+    symbol: COIN_SYMBOL[code] ?? '', // solo se usa si no hay bandera
+  }));
+  return { legs };
 });
 ---
 
@@ -46,9 +70,39 @@ const TRACK = [...PAIRS, ...PAIRS].map((pair) => {
 
   <!-- Marquee de pares (decorativo) -->
   <div class="ticker" aria-hidden="true">
-    <div class="ticker-track">
-      {TRACK.map(({ base, quote }) => (
-        <span><b>{base}</b>/{quote}</span>
+    <div class="ticker-track" style={`--ticker-duration:${DURATION}s`}>
+      <!-- Dos grupos idénticos: el track se mueve -50% (= un grupo) y el loop es invisible -->
+      {[0, 1].map(() => (
+        <div class="ticker-group">
+          {GROUP.map(({ legs }) => (
+            <span class="pair">
+              {legs.map(({ code, iso, symbol }, i) => (
+                <>
+                  {i === 1 && <span class="sep">/</span>}
+                  <span class={`cur${i === 0 ? ' cur--base' : ''}`}>
+                    {iso ? (
+                      /* Bandera decorativa (alt vacío). width/height evitan saltos de layout.
+                         Sin loading="lazy": el marquee desplaza imágenes fuera de pantalla y se vería el "pop-in".
+                         PLACEHOLDER: si querés self-host, bajá los SVG a /public/flags/ y cambiá la URL. */
+                      <img
+                        class="flag"
+                        src={`https://flagcdn.com/w40/${iso}.webp`}
+                        srcset={`https://flagcdn.com/w80/${iso}.webp 2x`}
+                        width="20"
+                        height="20"
+                        alt=""
+                        decoding="async"
+                      />
+                    ) : (
+                      <i class="coin">{symbol}</i>
+                    )}
+                    {i === 0 ? <b>{code}</b> : code}
+                  </span>
+                </>
+              ))}
+            </span>
+          ))}
+        </div>
       ))}
     </div>
   </div>
@@ -417,19 +471,61 @@ const TRACK = [...PAIRS, ...PAIRS].map((pair) => {
   .ticker-track {
     display: flex;
     width: max-content;
-    animation: ticker 45s linear infinite; /* lista duplicada: -50% = loop perfecto */
+    /* Duración definida desde el frontmatter (--ticker-duration) */
+    animation: ticker var(--ticker-duration, 45s) linear infinite;
+    will-change: transform; /* promueve a capa de GPU: animación más fluida */
   }
-  .ticker span {
+
+  /* Cada grupo no se encoge y ocupa al menos todo el ancho visible:
+     garantiza que nunca aparezca un hueco, ni en pantallas muy anchas */
+  .ticker-group {
+    display: flex;
+    flex-shrink: 0;
+    min-width: 100vw;
+  }
+
+  /* Cada par: [bandera] BASE / [bandera] QUOTE */
+  .ticker .pair {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     padding: 14px 28px;
     font: 500 0.78rem ui-monospace, SFMono-Regular, Menlo, monospace;
     letter-spacing: 0.08em;
     color: var(--mute);
     white-space: nowrap;
   }
-  .ticker span b { color: var(--lime); font-weight: 600; }
+  .ticker .cur { display: inline-flex; align-items: center; gap: 6px; }
+  .ticker .cur b { color: var(--lime); font-weight: 600; }
+
+  /* Banderas redondas (el SVG/WebP es rectangular: object-fit recorta al centro) */
+  .ticker .flag {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+
+  /* Cripto sin país: "moneda" con el símbolo, mismo tamaño que las banderas */
+  .ticker .coin {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    font: 700 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-style: normal;
+    letter-spacing: 0;
+    color: var(--lime);
+    border: 1px solid var(--lime);
+    background: rgba(166, 250, 88, 0.1);
+  }
 
   @keyframes ticker {
-    to { transform: translateX(-50%); }
+    to { transform: translateX(-50%); } /* -50% = exactamente un grupo */
   }
 
   /* ===== Movimiento reducido: marquee quieto ===== */
@@ -440,7 +536,7 @@ const TRACK = [...PAIRS, ...PAIRS].map((pair) => {
   /* ===== Mobile ===== */
   @media (max-width: 640px) {
     .hero { padding: 110px 0 100px; }
-    .ticker span { padding: 12px 20px; }
+    .ticker .pair { padding: 12px 20px; }
   }
 
   /* ===== Video de presentación ===== */
